@@ -1,8 +1,14 @@
 const express = require("express");
 const app = express();
-require("dotenv").config();
 const productRoutes = require("./routes/productRoutes");
+const authRoutes = require("./routes/authRoutes");
+
+require("dotenv").config();
 require("./config/dbConnention");
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 
 app.listen(process.env.PORT, () => {
