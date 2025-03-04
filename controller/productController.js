@@ -25,6 +25,21 @@ const getProductById = async (req, res) => {
   }
 };
 
+const addProduct = async (req, res) => {
+  const { name, category, stock, price } = req.body;
+  try {
+    //menambahkan data product ke db
+    const addProduct = await Product.create({ name, category, stock, price });
+    if (!addProduct)
+      return response(res, 400, false, "Added product is failed");
+
+    response(res, 201, true, "Added product is successfully", addProduct);
+  } catch (error) {
+    response(res, 500, false, error.message);
+    console.log(error);
+  }
+};
+
 const updateProduct = async (req, res) => {
   const id = req.params.id;
   const { name, category, stock, price } = req.body;
@@ -53,4 +68,26 @@ const updateProduct = async (req, res) => {
   } catch (error) {}
 };
 
-module.exports = { getAllProduct, getProductById, updateProduct };
+const deleteProduct = async (req, res) => {
+  const id = req.params.id;
+  try {
+    //menghapus data product di db
+    const deleteProduct = await Product.destroy({ where: { id } });
+    if (!deleteProduct) return response(res, 404, false, "Product not found");
+
+    response(res, 200, true, "Deleted product is successfully", {
+      row: deleteProduct,
+    });
+  } catch (error) {
+    response(res, 500, false, error.message);
+    console.log(error);
+  }
+};
+
+module.exports = {
+  getAllProduct,
+  getProductById,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+};
