@@ -9,7 +9,7 @@ require("./config/dbConnention");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use("/api/auth", authRoutes);
-app.use("/api/products", productRoutes);
+app.use("/api/product", productRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`server is running on port ${process.env.PORT}`);
