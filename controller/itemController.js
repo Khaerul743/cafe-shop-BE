@@ -44,4 +44,49 @@ const addOrderItem = async (req, res) => {
   }
 };
 
-module.exports = { getItemByOrderId, addOrderItem };
+const updateOrderItem = async (req, res) => {
+  const id = req.params.id;
+  const { quantity, price } = req.body;
+  try {
+    //cek apakah item ada
+    const itemExist = await OrderItem.findByPk(id);
+    if (!itemExist) return response(res, 404, false, "Order item not found");
+
+    const subTotal_price = quantity * price;
+    const updateItem = await OrderItem.update(
+      {
+        quantity,
+        price,
+        subTotal_price,
+      },
+      {
+        where: { id },
+      }
+    );
+    response(res, 201, true, "Update Item is successfully", {
+      row: updateItem,
+    });
+  } catch (error) {
+    response(res, 500, true, error.message);
+    console.log(error);
+  }
+};
+
+const deleteOrderItem = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const deleteItem = await OrderItem.destroy({ where: { id } });
+    if (!deleteItem) return response(res, 404, false, "Product not found");
+    response(res, 200, true, "Delete order item is successfully");
+  } catch (error) {
+    response(res, 500, false, error.message);
+    console.log(error);
+  }
+};
+
+module.exports = {
+  getItemByOrderId,
+  addOrderItem,
+  updateOrderItem,
+  deleteOrderItem,
+};
