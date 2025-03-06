@@ -1,14 +1,14 @@
 const express = require("express");
 const app = express();
 
+require("dotenv").config();
+require("./config/dbConnention");
+
 const productRoutes = require("./routes/productRoutes");
 const authRoutes = require("./routes/authRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const itemRoutes = require("./routes/itemRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
-
-require("dotenv").config();
-require("./config/dbConnention");
 
 //middleware
 app.use(express.urlencoded({ extended: true }));

@@ -1,4 +1,4 @@
-const { Order, User } = require("../models/relations");
+const { Order, User, OrderItem, Product } = require("../models/relations");
 const { response } = require("../utils/response");
 
 const getAllOrder = async (req, res) => {
@@ -25,20 +25,60 @@ const getOrderByUserId = async (req, res) => {
   }
 };
 
-const addNewOrder = async (req, res) => {
+const addNewOrder = async (req, res, next) => {
   const user_id = req.params.user_id;
-  const { total_price } = req.body;
+  const { total_price, items } = req.body;
+  const t = req.transaction;
   try {
     //Cek apakah user ada
     const isUserExist = await User.findByPk(user_id);
     if (!isUserExist) return response(res, 404, false, "User not found");
 
     //menambahkan order
-    const addOrder = await Order.create({ user_id, total_price });
+    const addOrder = await Order.create(
+      { user_id, total_price },
+      { transaction: t }
+    );
     if (!addOrder) return response(res, 400, false, "Invalid add order");
 
-    response(res, 200, true, "Add order is successfully", addOrder);
+    const orderItem = items.map((item) => ({
+      order_id: addOrder.id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      price: item.price,
+      subTotal_price: item.price * item.quantity,
+    }));
+
+    //tambahkan product ke order item
+    const addToOrderItem = await OrderItem.bulkCreate(orderItem, {
+      transaction: t,
+    });
+
+    //kurangi stock product
+    for (const item of items) {
+      const product = await Product.findByPk(item.product_id, {
+        transaction: t,
+      });
+      if (!product || product.stock < item.quantity) {
+        throw new Error("Stok tidak cukup");
+      }
+      await product.update(
+        {
+          stock: product.stock - item.quantity,
+        },
+        {
+          transaction: t,
+        }
+      );
+    }
+
+    await t.commit();
+    response(res, 200, true, "Add order is successfully", {
+      order_id: addOrder.id,
+      addToOrderItem,
+    });
   } catch (error) {
+    await t.rollback();
     response(res, 500, false, error.message);
     console.log(error);
   }

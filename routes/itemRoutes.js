@@ -6,6 +6,7 @@ const {
   updateOrderItem,
   deleteOrderItem,
 } = require("../controller/itemController");
+const { transaction } = require("../middlewares/transaction");
 
 router.get("/:order_id", getItemByOrderId);
 router.post("/:order_id/:product_id", addOrderItem);

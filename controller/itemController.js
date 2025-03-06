@@ -37,6 +37,17 @@ const addOrderItem = async (req, res) => {
       subTotal_price,
     });
     if (!addItem) return response(res, 400, false, "Invalid to add order item");
+
+    //kurangi stok
+    if (getProduct.stock < quantity) throw new Error("stok tidak cukup");
+    const updateStock = await Product.update(
+      {
+        stock: getProduct.stock - quantity,
+      },
+      {
+        where: { id: product_id },
+      }
+    );
     response(res, 200, true, "add order item is successfully", addItem);
   } catch (error) {
     response(res, 500, false, error.message);

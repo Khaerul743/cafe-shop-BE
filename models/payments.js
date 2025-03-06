@@ -16,6 +16,8 @@ const Payment = sequelize.define(
         model: "orders",
         key: "id",
       },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
     payment_method: {
       type: DataTypes.STRING,
