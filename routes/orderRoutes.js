@@ -11,7 +11,7 @@ const { transaction } = require("../middlewares/transaction");
 
 router.get("/", getAllOrder);
 router.get("/:user_id", getOrderByUserId);
-router.post("/:user_id", transaction, addNewOrder);
+router.post("/", transaction, addNewOrder);
 router.put("/:id", updateOrder);
 router.delete("/:id", deleteOrder);
 

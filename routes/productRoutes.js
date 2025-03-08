@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const { authorizationRoles } = require("../middlewares/authRole");
+const { verifyToken } = require("../middlewares/jwt");
 const {
   getAllProduct,
   getProductById,
@@ -8,7 +10,7 @@ const {
   deleteProduct,
 } = require("../controller/productController");
 
-router.get("/", getAllProduct);
+router.get("/", verifyToken, authorizationRoles("customer"), getAllProduct);
 router.get("/:id", getProductById);
 router.post("/", addProduct);
 router.put("/:id", updateProduct);

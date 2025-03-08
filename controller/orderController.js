@@ -1,5 +1,6 @@
 const { Order, User, OrderItem, Product } = require("../models/relations");
 const { response } = require("../utils/response");
+const { calculateTotalPrice } = require("../utils/helper");
 
 const getAllOrder = async (req, res) => {
   try {
@@ -26,13 +27,16 @@ const getOrderByUserId = async (req, res) => {
 };
 
 const addNewOrder = async (req, res, next) => {
-  const user_id = req.params.user_id;
-  const { total_price, items } = req.body;
+  const user_id = req.body.user_id;
+  const { items } = req.body;
   const t = req.transaction;
   try {
     //Cek apakah user ada
     const isUserExist = await User.findByPk(user_id);
     if (!isUserExist) return response(res, 404, false, "User not found");
+
+    //calculate total price
+    const total_price = calculateTotalPrice(items);
 
     //menambahkan order
     const addOrder = await Order.create(
@@ -41,13 +45,18 @@ const addNewOrder = async (req, res, next) => {
     );
     if (!addOrder) return response(res, 400, false, "Invalid add order");
 
-    const orderItem = items.map((item) => ({
-      order_id: addOrder.id,
-      product_id: item.product_id,
-      quantity: item.quantity,
-      price: item.price,
-      subTotal_price: item.price * item.quantity,
-    }));
+    const orderItem = await Promise.all(
+      items.map(async (item) => {
+        const product = await Product.findByPk(item.product_id); // Ambil harga dari DB
+        return {
+          order_id: addOrder.id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: product.price, // Pakai harga dari DB
+          subTotal_price: product.price * item.quantity,
+        };
+      })
+    );
 
     //tambahkan product ke order item
     const addToOrderItem = await OrderItem.bulkCreate(orderItem, {

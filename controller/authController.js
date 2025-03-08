@@ -1,7 +1,9 @@
+const jwt = require("jsonwebtoken");
 const { User } = require("../models/relations");
 const { response } = require("../utils/response");
 const { hashPass, comparePass } = require("../utils/bcrypt");
 const { registerSchema, loginSchema } = require("../config/validation");
+require("dotenv").config();
 
 const registerHandler = async (req, res) => {
   const data = req.body;
@@ -38,10 +40,10 @@ const registerHandler = async (req, res) => {
 };
 
 const loginHandler = async (req, res) => {
-  const data = req.body;
+  const { email, password } = req.body;
   try {
     //validasi input user
-    const { error } = loginSchema.validate(data, { abortEarly: false });
+    const { error } = loginSchema.validate(req.body, { abortEarly: false });
     if (error)
       return response(
         res,
@@ -51,18 +53,33 @@ const loginHandler = async (req, res) => {
       );
 
     //cek apakah user ada
-    const isUserExist = await User.findOne({ where: { email: data.email } });
-    if (!isUserExist) return response(res, 404, false, "User not found");
+    const user = await User.findOne({ where: { email } });
+    if (!user) return response(res, 404, false, "User not found");
+
+    // const isUserExist = await User.findOne({ where: { email: data.email } });
+    // if (!isUserExist) return response(res, 404, false, "User not found");
 
     //cek apakah password valid
-    const validationPass = await comparePass(
-      isUserExist.password,
-      data.password
-    );
+    const validationPass = await comparePass(user.password, password);
     if (!validationPass) return response(res, 400, false, "Invalid password");
 
-    response(res, 200, true, "Login is successfully");
+    jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.SECRET_KEY,
+      { expiresIn: "1h" },
+      (err, token) => {
+        if (err) return response(res, 400, false, "token failed generation");
+
+        res.cookie("token", token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: "Lax",
+        });
+        response(res, 200, true, "Login is successfully", { email });
+      }
+    );
   } catch (error) {
+    console.log(error);
     return response(res, 500, false, error.message);
   }
 };

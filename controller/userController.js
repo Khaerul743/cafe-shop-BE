@@ -2,6 +2,7 @@ const { User } = require("../models/relations");
 const { response } = require("../utils/response");
 
 const getAllUser = async (req, res) => {
+  console.log(req.user);
   try {
     const getUsers = await User.findAll();
     response(res, 200, true, "Get all user", getUsers);
@@ -19,6 +20,19 @@ const getUserById = async (req, res) => {
 
     const { username, email, role } = user;
     response(res, 200, true, "Get user by id", { username, email, role });
+  } catch (error) {
+    response(res, 500, false, error.message);
+    console.log(error);
+  }
+};
+
+const userProfile = async (req, res) => {
+  const id = req.user.id;
+  try {
+    const user = await User.findByPk(id);
+    const { username, email, role } = user;
+    if (!user) return response(res, 404, false, "User not found");
+    response(res, 200, true, "Get user profile", { username, email, role });
   } catch (error) {
     response(res, 500, false, error.message);
     console.log(error);
@@ -65,4 +79,10 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { getAllUser, getUserById, updateUserRole, deleteUser };
+module.exports = {
+  getAllUser,
+  getUserById,
+  userProfile,
+  updateUserRole,
+  deleteUser,
+};

@@ -1,5 +1,7 @@
+const cors = require("cors");
 const express = require("express");
 const app = express();
+const cookieParser = require("cookie-parser");
 
 require("dotenv").config();
 require("./config/dbConnention");
@@ -12,6 +14,12 @@ const itemRoutes = require("./routes/itemRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 
 //middleware
+app.use(
+  cors({
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
