@@ -36,7 +36,14 @@ const addNewOrder = async (req, res, next) => {
     if (!isUserExist) return response(res, 404, false, "User not found");
 
     //calculate total price
-    const total_price = calculateTotalPrice(items);
+    const itemsMapping = await Promise.all(
+      items.map(async (item) => {
+        const getProduct = await Product.findByPk(item.product_id);
+        const price = getProduct.price;
+        return { quantity: item.quantity, price };
+      })
+    );
+    const total_price = calculateTotalPrice(itemsMapping);
 
     //menambahkan order
     const addOrder = await Order.create(
@@ -66,6 +73,7 @@ const addNewOrder = async (req, res, next) => {
     //kurangi stock product
     for (const item of items) {
       const product = await Product.findByPk(item.product_id, {
+        lock: t.LOCK.UPDATE,
         transaction: t,
       });
       if (!product || product.stock < item.quantity) {

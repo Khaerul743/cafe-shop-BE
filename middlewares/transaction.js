@@ -1,7 +1,10 @@
 const sequelize = require("../config/dbConnention");
+const { Sequelize } = require("sequelize");
 
 const transaction = async (req, res, next) => {
-  const t = await sequelize.transaction();
+  const t = await sequelize.transaction({
+    isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.REPEATABLE_READ, // Set isolation level
+  });
   req.transaction = t;
   try {
     await next();

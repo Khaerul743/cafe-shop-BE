@@ -21,7 +21,7 @@ const Payment = sequelize.define(
     },
     payment_method: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     amount: {
       type: DataTypes.DECIMAL(10, 2),
